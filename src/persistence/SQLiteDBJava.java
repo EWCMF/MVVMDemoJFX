@@ -1,11 +1,44 @@
 package persistence;
 
+import model.Model;
+
 import java.io.File;
 import java.sql.*;
+import java.util.Observable;
+import java.util.Observer;
 
 public class SQLiteDBJava {
-    public SQLiteDBJava() {
+    private Model model;
+
+    public SQLiteDBJava(Model model) {
+        this.model = model;
         initDB();
+
+        if (model == null) {
+            this.model = new Model();
+            this.model.setInput(read());
+        }
+        else {
+            this.model = model;
+            update(model.getInput());
+        }
+        observeModel();
+    }
+
+    private void observeModel() {
+        model.addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg) {
+                if (o instanceof Model) {
+                    String data = ((Model) o).getInput();
+                    SQLiteDBJava.this.update(data);
+                }
+            }
+        });
+    }
+
+    public Model getModel() {
+        return model;
     }
 
     private Connection connect() {
